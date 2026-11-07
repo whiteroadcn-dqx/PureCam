@@ -1,0 +1,43 @@
+
+name: Build PureCam APK
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "PureCam-Starter.zip"
+      - ".github/workflows/android.yml"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Unpack source
+        run: |
+          mkdir -p PureCam
+          unzip -q PureCam-Starter.zip -d PureCam
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.13"
+
+      - name: Build APK
+        working-directory: PureCam
+        run: gradle assembleDebug --no-daemon
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: PureCam-debug-apk
+          path: PureCam/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
